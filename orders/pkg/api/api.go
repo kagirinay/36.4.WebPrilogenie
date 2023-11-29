@@ -29,8 +29,17 @@ func (api *API) Router() *mux.Router {
 	return api.r
 }
 
+// headersMiddleware устанавливает заголовки ответа сервера.
+func (api *API) headersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
+	})
+}
+
 // Регистрация методов API в маршрутизаторе запросов.
 func (api *API) endpoints() {
+	api.r.Use(api.headersMiddleware)
 	api.r.HandleFunc("/orders", api.ordersHandler).Methods(http.MethodGet)
 	api.r.HandleFunc("/orders", api.newOrderHandler).Methods(http.MethodPost)
 	api.r.HandleFunc("/orders/{id}", api.updateOrderHandler).Methods(http.MethodPatch)

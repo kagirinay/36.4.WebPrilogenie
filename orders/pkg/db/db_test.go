@@ -2,136 +2,42 @@ package db
 
 import (
 	"reflect"
-	"sync"
 	"testing"
+	"time"
 )
 
-func TestDB_DeleteOrder(t *testing.T) {
-	type fields struct {
-		m     sync.Mutex
-		id    int
-		store map[int]Order
+// Тест всех CRUD-операций с заказами.
+func TestDB_Order(t *testing.T) {
+	// Создаем БД.
+	db := New()
+	o := Order{
+		IsOpen:       true,
+		DeliveryTime: time.Now().Unix(),
 	}
-	type args struct {
-		id int
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			db := &DB{
-				m:     tt.fields.m,
-				id:    tt.fields.id,
-				store: tt.fields.store,
-			}
-			db.DeleteOrder(tt.args.id)
-		})
-	}
-}
 
-func TestDB_NewOrder(t *testing.T) {
-	type fields struct {
-		m     sync.Mutex
-		id    int
-		store map[int]Order
+	// Тест создания записи в БД.
+	o.ID = db.NewOrder(o)
+	// Проверка.
+	ord := db.Orders()
+	if !reflect.DeepEqual(ord[0], o) {
+		t.Errorf("не найден созданный заказ")
 	}
-	type args struct {
-		o Order
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   int
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			db := &DB{
-				m:     tt.fields.m,
-				id:    tt.fields.id,
-				store: tt.fields.store,
-			}
-			if got := db.NewOrder(tt.args.o); got != tt.want {
-				t.Errorf("NewOrder() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func TestDB_Orders(t *testing.T) {
-	type fields struct {
-		m     sync.Mutex
-		id    int
-		store map[int]Order
+	// Тест обновления записи в БД.
+	o.IsOpen = false
+	o.DeliveryAddress = "Адрес доставки"
+	db.UpdateOrder(o)
+	// Проверка.
+	ord = db.Orders()
+	if !reflect.DeepEqual(ord[0], o) {
+		t.Errorf("не найден обновленный заказ")
 	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []Order
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			db := &DB{
-				m:     tt.fields.m,
-				id:    tt.fields.id,
-				store: tt.fields.store,
-			}
-			if got := db.Orders(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Orders() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func TestDB_UpdateOrder(t *testing.T) {
-	type fields struct {
-		m     sync.Mutex
-		id    int
-		store map[int]Order
-	}
-	type args struct {
-		o Order
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			db := &DB{
-				m:     tt.fields.m,
-				id:    tt.fields.id,
-				store: tt.fields.store,
-			}
-			db.UpdateOrder(tt.args.o)
-		})
-	}
-}
-
-func TestNew(t *testing.T) {
-	tests := []struct {
-		name string
-		want *DB
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := New(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
-		})
+	// Тест удаления записи из БД.
+	db.DeleteOrder(o.ID)
+	// Проверка.
+	ord = db.Orders()
+	if len(ord) != 0 {
+		t.Errorf("заказ не был удален")
 	}
 }
